@@ -1,8 +1,9 @@
 ## TODO
 - [ ] readme
-- [ ] logic for packs
-- [ ] tests for pack logic
-- [ ] local api setup
+- [x] logic for packs
+  - [ ] reivisit pack logic eventually
+- [x] tests for pack logic
+- [x] local api setup
 - [ ] lambda api entry point setup
 - [ ] setup terraform for infra
 - [ ] ci/cd
@@ -42,7 +43,15 @@ gymshark-saddiqs1
 
 ## Running Locally
 
-TODO
+TODO - 'proper' api docs here
+
+```bash
+cd backend
+go run cmd/local/main.go
+
+curl http://localhost:8080/packs?health
+curl http://localhost:8080/packs?itemsOrdered=1500
+```
 
 ## Debug
 

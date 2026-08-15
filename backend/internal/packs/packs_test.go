@@ -51,8 +51,8 @@ func TestPacks(t *testing.T) {
 
 	for name, test := range tests {
 		t.Run(name, func(t *testing.T) {
-			if got, expected := Packs(test.itemsOrdered), test.result; !reflect.DeepEqual(got, expected) {
-				t.Fatalf("Packs(%d) returned %v; expected %v", test.itemsOrdered, got, expected)
+			if got, expected := GetPacksForOrder(test.itemsOrdered), test.result; !reflect.DeepEqual(got, expected) {
+				t.Fatalf("GetPacksForOrder(%d) returned %v; expected %v", test.itemsOrdered, got, expected)
 			}
 		})
 	}

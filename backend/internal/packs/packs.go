@@ -1,7 +1,7 @@
 package packs
 
 // TODO - revisit this eventually, logic is currently incorrect
-func Packs(itemsOrdered int) map[int]int {
+func GetPacksForOrder(itemsOrdered int) map[int]int {
 	packSizes := []int{5000, 2000, 1000, 500, 250}
 	smallestPackSize := 250
 	resultPacks := make(map[int]int)
