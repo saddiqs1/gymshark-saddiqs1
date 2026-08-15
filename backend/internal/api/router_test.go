@@ -12,15 +12,70 @@ func TestHealth(t *testing.T) {
 
 	NewRouter().ServeHTTP(response, request)
 
-	if response.Code != http.StatusOK {
-		t.Fatalf("status code = %d; want %d", response.Code, http.StatusOK)
+	actualResponseCode := response.Code
+	expectedResponseCode := http.StatusOK
+	if actualResponseCode != expectedResponseCode {
+		t.Fatalf("status code is %v; expected %v", actualResponseCode, expectedResponseCode)
 	}
 
-	if contentType := response.Header().Get("Content-Type"); contentType != "application/json" {
-		t.Fatalf("Content-Type = %q; want %q", contentType, "application/json")
+	actualContentType := response.Header().Get("Content-Type")
+	expectedContentType := "application/json"
+	if actualContentType != expectedContentType {
+		t.Fatalf("Content-Type is %v; expected %v", actualContentType, expectedContentType)
 	}
 
-	if body := response.Body.String(); body != "{\"status\":\"ok\"}\n" {
-		t.Fatalf("body = %q; want %q", body, "{\"status\":\"ok\"}\n")
+	actualBody := response.Body.String()
+	expectedBody := "{\"status\":\"ok\"}\n"
+	if actualBody != expectedBody {
+		t.Fatalf("body is %v; expected %v", actualBody, expectedBody)
+	}
+}
+
+func TestGetPacks(t *testing.T) {
+	request := httptest.NewRequest(http.MethodGet, "/packs?itemsOrdered=501", nil)
+	response := httptest.NewRecorder()
+
+	NewRouter().ServeHTTP(response, request)
+
+	actualResponseCode := response.Code
+	expectedResponseCode := http.StatusOK
+	if actualResponseCode != expectedResponseCode {
+		t.Fatalf("status code is %v; expected %v", actualResponseCode, expectedResponseCode)
+	}
+
+	actualBody := response.Body.String()
+	expectedBody := "{\"250\":1,\"500\":1}\n"
+	if actualBody != expectedBody {
+		t.Fatalf("body is %v; expected %v", actualBody, expectedBody)
+	}
+}
+
+func TestGetPacksRejectsInvalidItemsOrdered(t *testing.T) {
+	tests := []string{
+		"/packs",
+		"/packs?itemsOrdered=invalid",
+		"/packs?itemsOrdered=0",
+		"/packs?itemsOrdered=-1",
+	}
+
+	for _, target := range tests {
+		t.Run(target, func(t *testing.T) {
+			request := httptest.NewRequest(http.MethodGet, target, nil)
+			response := httptest.NewRecorder()
+
+			NewRouter().ServeHTTP(response, request)
+
+			actualResponseCode := response.Code
+			expectedResponseCode := http.StatusBadRequest
+			if actualResponseCode != expectedResponseCode {
+				t.Fatalf("status code is %v; expected %v", actualResponseCode, expectedResponseCode)
+			}
+
+			actualBody := response.Body.String()
+			expectedBody := "{\"error\":\"itemsOrdered must be a positive integer\"}\n"
+			if actualBody != expectedBody {
+				t.Fatalf("body is %v; expected %v", actualBody, expectedBody)
+			}
+		})
 	}
 }
