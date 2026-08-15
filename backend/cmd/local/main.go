@@ -2,8 +2,10 @@ package main
 
 import (
 	"log"
+	"net/http"
 
 	"github.com/saddiqs1/gymshark-saddiqs1/config"
+	"github.com/saddiqs1/gymshark-saddiqs1/internal/api"
 	"github.com/saddiqs1/gymshark-saddiqs1/pkg/logger"
 )
 
@@ -14,8 +16,14 @@ func main() {
 	}
 
 	logger := logger.New(cfg.Environment.LogLevel, cfg.Environment.AppEnv, nil)
-	logger.Info().Msgf("hello world - local")
+	server := &http.Server{
+		Addr:    ":8080",
+		Handler: api.NewRouter(),
+	}
 
-	// TODO - spin up local api using net/http
-	// local.Run(context.Background(), logger, cfg)
+	logger.Info().Msgf("server running on %s", server.Addr)
+
+	if err := server.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+		logger.Fatal().Err(err).Msg("server stopped")
+	}
 }
