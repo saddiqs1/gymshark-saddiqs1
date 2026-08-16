@@ -8,7 +8,7 @@ import (
 	"github.com/rs/zerolog"
 )
 
-func New(level string, appEnv string, requestID *string) *zerolog.Logger {
+func New(level string, appEnv string) *zerolog.Logger {
 	var l zerolog.Level
 
 	switch strings.ToLower(level) {
@@ -44,10 +44,6 @@ func New(level string, appEnv string, requestID *string) *zerolog.Logger {
 	}
 
 	logger := loggerContext.Logger()
-
-	if requestID != nil {
-		logger = logger.With().Str("requestId", *requestID).Logger()
-	}
 
 	return &logger
 }

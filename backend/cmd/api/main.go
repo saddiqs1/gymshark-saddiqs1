@@ -7,6 +7,7 @@ import (
 
 	"github.com/saddiqs1/gymshark-saddiqs1/config"
 	"github.com/saddiqs1/gymshark-saddiqs1/internal/api"
+	"github.com/saddiqs1/gymshark-saddiqs1/internal/middleware"
 	"github.com/saddiqs1/gymshark-saddiqs1/pkg/logger"
 )
 
@@ -16,10 +17,10 @@ func main() {
 		log.Fatalf("config error: %s", err)
 	}
 
-	logger := logger.New(cfg.Environment.LogLevel, cfg.Environment.AppEnv, nil)
+	logger := logger.New(cfg.Environment.LogLevel, cfg.Environment.AppEnv)
 	server := &http.Server{
 		Addr:    ":8080",
-		Handler: api.NewRouter(),
+		Handler: middleware.WithRequestLogger(logger, api.NewRouter()),
 	}
 
 	logger.Info().Msgf("server running on %s", server.Addr)
