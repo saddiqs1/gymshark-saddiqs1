@@ -36,7 +36,7 @@ jobs:
 
       - name: Check infra diff
         working-directory: infra
-        run: terraform plan -input=false
+        run: terraform plan -input=false -var="image_tag=pull-request"
 
   test-code:
     name: Test Go code

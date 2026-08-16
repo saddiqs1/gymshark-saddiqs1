@@ -44,9 +44,13 @@ jobs:
             -backend-config="encrypt=true" \
             -backend-config="use_lockfile=true"
 
-      - name: Apply Terraform
+      - name: Ensure ECR repository exists
         working-directory: infra
-        run: terraform apply -auto-approve -input=false
+        run: |
+          terraform apply -auto-approve -input=false \
+            -var="image_tag=$IMAGE_TAG" \
+            -target=aws_ecr_repository.app \
+            -target=aws_ecr_lifecycle_policy.app
 
       - name: Read ECR repository URL
         working-directory: infra
@@ -63,3 +67,7 @@ jobs:
           docker build -t gymshark-saddiqs1 .
           docker tag gymshark-saddiqs1 "$ECR_REPOSITORY:$IMAGE_TAG"
           docker push "$ECR_REPOSITORY:$IMAGE_TAG"
+
+      - name: Apply Terraform
+        working-directory: infra
+        run: terraform apply -auto-approve -input=false -var="image_tag=$IMAGE_TAG"
