@@ -1,4 +1,4 @@
-FROM golang:1.25 as build
+FROM golang:1.25 AS build
 
 WORKDIR /gymshark-saddiqs1
 COPY ./backend/go.mod ./backend/go.sum ./
