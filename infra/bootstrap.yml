@@ -116,6 +116,58 @@ Resources:
         - Key: ManagedBy
           Value: CloudFormation
 
+  GitHubPlanRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Sub "${ProjectName}-github-plan"
+      Description: Plans Terraform infrastructure changes from GitHub pull requests
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              Federated: !Ref GitHubOidcProvider
+            Action: sts:AssumeRoleWithWebIdentity
+            Condition:
+              StringEquals:
+                token.actions.githubusercontent.com:aud: sts.amazonaws.com
+                token.actions.githubusercontent.com:sub: !Sub "repo:${GitHubOwner}/${GitHubRepository}:pull_request"
+      Policies:
+        - PolicyName: TerraformStateReadAccess
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: Allow
+                Action:
+                  - s3:GetBucketLocation
+                  - s3:ListBucket
+                Resource: !GetAtt TerraformStateBucket.Arn
+              - Effect: Allow
+                Action:
+                  - s3:GetObject
+                Resource: !Sub "${TerraformStateBucket.Arn}/${ProjectName}/*"
+              - Effect: Allow
+                Action:
+                  - s3:GetObject
+                  - s3:PutObject
+                  - s3:DeleteObject
+                Resource: !Sub "${TerraformStateBucket.Arn}/${ProjectName}/*.tflock"
+        - PolicyName: EcrRepositoryReadAccess
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: Allow
+                Action:
+                  - ecr:DescribeRepositories
+                  - ecr:GetLifecyclePolicy
+                  - ecr:ListTagsForResource
+                Resource: !Sub "arn:${AWS::Partition}:ecr:${AWS::Region}:${AWS::AccountId}:repository/${ProjectName}"
+      Tags:
+        - Key: Project
+          Value: !Ref ProjectName
+        - Key: ManagedBy
+          Value: CloudFormation
+
 Outputs:
   TerraformStateBucketName:
     Description: Value for the TF_STATE_BUCKET GitHub Actions secret
@@ -123,3 +175,6 @@ Outputs:
   GitHubDeployRoleArn:
     Description: Value for the AWS_DEPLOY_ROLE_ARN GitHub Actions secret
     Value: !GetAtt GitHubDeployRole.Arn
+  GitHubPlanRoleArn:
+    Description: Value for the AWS_PLAN_ROLE_ARN GitHub Actions secret
+    Value: !GetAtt GitHubPlanRole.Arn

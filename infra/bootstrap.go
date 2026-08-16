@@ -128,6 +128,10 @@ func bootstrap(cfg config) error {
 	if err != nil {
 		return err
 	}
+	planRoleARN, err := stackOutput(cfg, "GitHubPlanRoleArn")
+	if err != nil {
+		return err
+	}
 
 	repository := cfg.githubOwner + "/" + cfg.githubRepository
 	fmt.Printf("Configuring GitHub Actions secrets for %q...\n", repository)
@@ -135,6 +139,9 @@ func bootstrap(cfg config) error {
 		return err
 	}
 	if _, err := run(deployRoleARN, "gh", "secret", "set", "AWS_DEPLOY_ROLE_ARN", "--repo", repository); err != nil {
+		return err
+	}
+	if _, err := run(planRoleARN, "gh", "secret", "set", "AWS_PLAN_ROLE_ARN", "--repo", repository); err != nil {
 		return err
 	}
 
