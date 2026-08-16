@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"net/http"
 	"strconv"
+	"strings"
 
 	"github.com/saddiqs1/gymshark-saddiqs1/internal/packs"
 )
@@ -25,7 +26,20 @@ func getPacks(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	writeJSON(w, http.StatusOK, packs.GetPacksForOrder(itemsOrdered))
+	packSizesStr := strings.Split(r.URL.Query().Get("packSizes"), ",")
+	packSizes := make([]int, len(packSizesStr))
+	for i, s := range packSizesStr {
+		v, err := strconv.Atoi(s)
+		if err != nil || v <= 0 {
+			writeJSON(w, http.StatusBadRequest, map[string]string{
+				"error": "packSizes must be a list of positive integers",
+			})
+			return
+		}
+		packSizes[i] = v
+	}
+
+	writeJSON(w, http.StatusOK, packs.GetPacksForOrder(itemsOrdered, packSizes))
 }
 
 func health(w http.ResponseWriter, _ *http.Request) {

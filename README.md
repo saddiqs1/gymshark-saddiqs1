@@ -6,7 +6,7 @@
 - [x] local api setup
 - [x] setup terraform for infra
 - [x] ci/cd
-- [ ] lambda api entry point setup
+- [x] lambda api entry point setup
 
 STRETCH
 - [ ] ability to manage pack sizes
