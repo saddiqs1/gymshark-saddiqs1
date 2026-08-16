@@ -1,0 +1,35 @@
+name: Build & Test
+
+on:
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  # TODO - terraform plan
+  check-infra-diff:
+    name: Check infra diff
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Check infra diff
+        run: echo "terraform plan"
+
+  test-code:
+    name: Test Go code
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Test Go code
+        run: cd backend && go test ./...
+
+  build-artifact:
+    name: Build artifact
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Build docker image
+        run: docker build -t gymshark-saddiqs1 .
