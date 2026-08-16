@@ -5,9 +5,15 @@ Parameters:
   GitHubOwner:
     Type: String
     Default: saddiqs1
+  GitHubOwnerId:
+    Type: String
+    Default: "18683829"
   GitHubRepository:
     Type: String
     Default: gymshark-saddiqs1
+  GitHubRepositoryId:
+    Type: String
+    Default: "1333598191"
   GitHubBranch:
     Type: String
     Default: main
@@ -64,7 +70,7 @@ Resources:
             Condition:
               StringEquals:
                 token.actions.githubusercontent.com:aud: sts.amazonaws.com
-                token.actions.githubusercontent.com:sub: !Sub "repo:${GitHubOwner}/${GitHubRepository}:ref:refs/heads/${GitHubBranch}"
+                token.actions.githubusercontent.com:sub: !Sub "repo:${GitHubOwner}@${GitHubOwnerId}/${GitHubRepository}@${GitHubRepositoryId}:ref:refs/heads/${GitHubBranch}"
       Policies:
         - PolicyName: TerraformStateAccess
           PolicyDocument:
@@ -131,7 +137,7 @@ Resources:
             Condition:
               StringEquals:
                 token.actions.githubusercontent.com:aud: sts.amazonaws.com
-                token.actions.githubusercontent.com:sub: !Sub "repo:${GitHubOwner}/${GitHubRepository}:pull_request"
+                token.actions.githubusercontent.com:sub: !Sub "repo:${GitHubOwner}@${GitHubOwnerId}/${GitHubRepository}@${GitHubRepositoryId}:pull_request"
       Policies:
         - PolicyName: TerraformStateReadAccess
           PolicyDocument:

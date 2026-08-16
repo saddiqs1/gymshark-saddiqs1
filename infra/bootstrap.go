@@ -14,11 +14,13 @@ import (
 const stackName = "gymshark-saddiqs1-bootstrap"
 
 type config struct {
-	awsProfile       string
-	awsRegion        string
-	githubOwner      string
-	githubRepository string
-	githubBranch     string
+	awsProfile         string
+	awsRegion          string
+	githubOwner        string
+	githubOwnerID      string
+	githubRepository   string
+	githubRepositoryID string
+	githubBranch       string
 }
 
 func run(input string, name string, args ...string) (string, error) {
@@ -114,7 +116,9 @@ func bootstrap(cfg config) error {
 		"--profile", cfg.awsProfile,
 		"--parameter-overrides",
 		"GitHubOwner="+cfg.githubOwner,
+		"GitHubOwnerId="+cfg.githubOwnerID,
 		"GitHubRepository="+cfg.githubRepository,
+		"GitHubRepositoryId="+cfg.githubRepositoryID,
 		"GitHubBranch="+cfg.githubBranch,
 	); err != nil {
 		return err
@@ -145,7 +149,7 @@ func bootstrap(cfg config) error {
 		return err
 	}
 
-	fmt.Println("Bootstrap complete. GitHub Actions can now provision ECR and push images.")
+	fmt.Println("Bootstrap complete. GitHub Actions can now be used to provision infra via terraform.")
 	return nil
 }
 
@@ -154,7 +158,9 @@ func main() {
 	flag.StringVar(&cfg.awsProfile, "aws-profile", "", "AWS CLI profile to use (required)")
 	flag.StringVar(&cfg.awsRegion, "aws-region", "eu-west-1", "AWS region")
 	flag.StringVar(&cfg.githubOwner, "github-owner", "saddiqs1", "GitHub repository owner")
+	flag.StringVar(&cfg.githubOwnerID, "github-owner-id", "18683829", "Immutable GitHub repository owner ID")
 	flag.StringVar(&cfg.githubRepository, "github-repository", "gymshark-saddiqs1", "GitHub repository name")
+	flag.StringVar(&cfg.githubRepositoryID, "github-repository-id", "1333598191", "Immutable GitHub repository ID")
 	flag.StringVar(&cfg.githubBranch, "github-branch", "main", "Branch allowed to deploy")
 	flag.Parse()
 
