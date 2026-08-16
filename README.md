@@ -47,7 +47,7 @@ TODO - 'proper' api docs here
 
 ```bash
 cd backend
-go run cmd/local/main.go
+go run cmd/api/main.go
 
 curl http://localhost:8080/health
 curl http://localhost:8080/packs?itemsOrdered=1500

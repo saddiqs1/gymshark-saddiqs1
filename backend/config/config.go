@@ -21,20 +21,13 @@ type (
 	}
 )
 
-func NewLocalConfig() (*Config, error) {
-	err := loadEnv()
-	if err != nil {
+func NewConfig() (*Config, error) {
+	if err := loadEnv(); err != nil {
 		return nil, err
 	}
 
-	return NewConfig()
-}
-
-func NewConfig() (*Config, error) {
 	cfg := &Config{}
-
-	err := env.Parse(cfg)
-	if err != nil {
+	if err := env.Parse(cfg); err != nil {
 		return nil, fmt.Errorf("parse config: %w", err)
 	}
 

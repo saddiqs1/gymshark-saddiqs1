@@ -24,8 +24,7 @@ func main() {
 
 	logger.Info().Msgf("server running on %s", server.Addr)
 
-	err = server.ListenAndServe()
-	if err != nil && !errors.Is(err, http.ErrServerClosed) {
+	if err = server.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
 		logger.Fatal().Err(err).Msg("server stopped")
 	}
 }
