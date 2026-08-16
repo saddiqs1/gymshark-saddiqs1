@@ -64,7 +64,7 @@ jobs:
 
       - name: Build and push docker image
         run: |
-          docker build -t gymshark-saddiqs1 .
+          docker build --platform linux/arm64 -t gymshark-saddiqs1 .
           docker tag gymshark-saddiqs1 "$ECR_REPOSITORY:$IMAGE_TAG"
           docker push "$ECR_REPOSITORY:$IMAGE_TAG"
 
