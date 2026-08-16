@@ -1,8 +1,31 @@
 package main
 
-import "fmt"
+import (
+	"errors"
+	"log"
+	"net/http"
 
-// TODO - lambda entry point
+	"github.com/saddiqs1/gymshark-saddiqs1/config"
+	"github.com/saddiqs1/gymshark-saddiqs1/internal/api"
+	"github.com/saddiqs1/gymshark-saddiqs1/pkg/logger"
+)
+
 func main() {
-	fmt.Print("hello world - lambda")
+	cfg, err := config.NewConfig()
+	if err != nil {
+		log.Fatalf("config error: %s", err)
+	}
+
+	logger := logger.New(cfg.Environment.LogLevel, cfg.Environment.AppEnv, nil)
+	server := &http.Server{
+		Addr:    ":8080",
+		Handler: api.NewRouter(),
+	}
+
+	logger.Info().Msgf("server running on %s", server.Addr)
+
+	err = server.ListenAndServe()
+	if err != nil && !errors.Is(err, http.ErrServerClosed) {
+		logger.Fatal().Err(err).Msg("server stopped")
+	}
 }

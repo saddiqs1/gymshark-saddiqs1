@@ -1,6 +1,7 @@
 package main
 
 import (
+	"errors"
 	"log"
 	"net/http"
 
@@ -24,7 +25,7 @@ func main() {
 	logger.Info().Msgf("server running on %s", server.Addr)
 
 	err = server.ListenAndServe()
-	if err != nil && err != http.ErrServerClosed {
+	if err != nil && !errors.Is(err, http.ErrServerClosed) {
 		logger.Fatal().Err(err).Msg("server stopped")
 	}
 }

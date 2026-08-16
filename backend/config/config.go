@@ -22,13 +22,20 @@ type (
 )
 
 func NewLocalConfig() (*Config, error) {
-	if err := loadEnv(); err != nil {
-		return nil, fmt.Errorf("no .env file found")
+	err := loadEnv()
+	if err != nil {
+		return nil, err
 	}
 
+	return NewConfig()
+}
+
+func NewConfig() (*Config, error) {
 	cfg := &Config{}
-	if err := env.Parse(cfg); err != nil {
-		return nil, fmt.Errorf("config error: %w", err)
+
+	err := env.Parse(cfg)
+	if err != nil {
+		return nil, fmt.Errorf("parse config: %w", err)
 	}
 
 	return cfg, nil
@@ -57,7 +64,8 @@ func loadEnv() error {
 
 		envPath := filepath.Join(cwd, ".env")
 
-		if err := godotenv.Load(envPath); err != nil {
+		err = godotenv.Load(envPath)
+		if err != nil {
 			return fmt.Errorf("no .env file found")
 		}
 	}
