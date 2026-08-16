@@ -6,15 +6,37 @@ on:
       - main
 
 jobs:
-  # TODO - terraform plan
   check-infra-diff:
     name: Check infra diff
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
     steps:
       - uses: actions/checkout@v3
 
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_DEPLOY_ROLE_ARN }}
+          aws-region: eu-west-1
+
+      - name: Set up Terraform
+        uses: hashicorp/setup-terraform@v3
+
+      - name: Initialise Terraform
+        working-directory: infra
+        run: |
+          terraform init \
+            -backend-config="bucket=${{ secrets.TF_STATE_BUCKET }}" \
+            -backend-config="key=gymshark-saddiqs1/terraform.tfstate" \
+            -backend-config="region=eu-west-1" \
+            -backend-config="encrypt=true" \
+            -backend-config="use_lockfile=true"
+
       - name: Check infra diff
-        run: echo "terraform plan"
+        working-directory: infra
+        run: terraform plan -input=false
 
   test-code:
     name: Test Go code
