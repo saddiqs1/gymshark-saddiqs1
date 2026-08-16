@@ -3,6 +3,8 @@ package packs
 import (
 	"reflect"
 	"testing"
+
+	"github.com/rs/zerolog"
 )
 
 func TestPacks(t *testing.T) {
@@ -61,8 +63,8 @@ func TestPacks(t *testing.T) {
 
 	for name, test := range tests {
 		t.Run(name, func(t *testing.T) {
-			if got, expected := GetPacksForOrder(test.itemsOrdered, test.packSizes), test.result; !reflect.DeepEqual(got, expected) {
-				t.Fatalf("GetPacksForOrder(%d, %v) returned %v; expected %v", test.itemsOrdered, test.packSizes, got, expected)
+			if got, expected := GetPacksForOrder(&zerolog.Logger{}, test.itemsOrdered, test.packSizes), test.result; !reflect.DeepEqual(got, expected) {
+				t.Fatalf("GetPacksForOrder(logger, %d, %v) returned %v; expected %v", test.itemsOrdered, test.packSizes, got, expected)
 			}
 		})
 	}

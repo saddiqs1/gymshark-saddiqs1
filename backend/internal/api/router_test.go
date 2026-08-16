@@ -4,13 +4,15 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"testing"
+
+	"github.com/rs/zerolog"
 )
 
 func TestHealth(t *testing.T) {
 	request := httptest.NewRequest(http.MethodGet, "/health", nil)
 	response := httptest.NewRecorder()
 
-	NewRouter().ServeHTTP(response, request)
+	NewRouter(&zerolog.Logger{}).ServeHTTP(response, request)
 
 	actualResponseCode := response.Code
 	expectedResponseCode := http.StatusOK
@@ -35,7 +37,7 @@ func TestGetPacks(t *testing.T) {
 	request := httptest.NewRequest(http.MethodGet, "/packs?itemsOrdered=501&packSizes=250,500,1000,2000,5000", nil)
 	response := httptest.NewRecorder()
 
-	NewRouter().ServeHTTP(response, request)
+	NewRouter(&zerolog.Logger{}).ServeHTTP(response, request)
 
 	actualResponseCode := response.Code
 	expectedResponseCode := http.StatusOK
@@ -63,7 +65,7 @@ func TestGetPacksRejectsInvalidItemsOrdered(t *testing.T) {
 			request := httptest.NewRequest(http.MethodGet, target, nil)
 			response := httptest.NewRecorder()
 
-			NewRouter().ServeHTTP(response, request)
+			NewRouter(&zerolog.Logger{}).ServeHTTP(response, request)
 
 			actualResponseCode := response.Code
 			expectedResponseCode := http.StatusBadRequest
@@ -94,7 +96,7 @@ func TestGetPacksRejectsInvalidPackSizes(t *testing.T) {
 			request := httptest.NewRequest(http.MethodGet, target, nil)
 			response := httptest.NewRecorder()
 
-			NewRouter().ServeHTTP(response, request)
+			NewRouter(&zerolog.Logger{}).ServeHTTP(response, request)
 
 			actualResponseCode := response.Code
 			expectedResponseCode := http.StatusBadRequest

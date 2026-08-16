@@ -2,10 +2,12 @@ package packs
 
 import (
 	"slices"
+
+	"github.com/rs/zerolog"
 )
 
 // TODO - revisit this eventually, logic is currently incorrect
-func GetPacksForOrder(itemsOrdered int, packSizes []int) map[int]int {
+func GetPacksForOrder(logger *zerolog.Logger, itemsOrdered int, packSizes []int) map[int]int {
 	orderedPackSizes := orderPackSizes(packSizes)
 	smallestPackSize := 250
 	resultPacks := make(map[int]int)

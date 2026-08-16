@@ -17,15 +17,15 @@ func main() {
 		log.Fatalf("config error: %s", err)
 	}
 
-	logger := logger.New(cfg.Environment.LogLevel, cfg.Environment.AppEnv)
+	appLogger := logger.New(cfg.Environment.LogLevel, cfg.Environment.AppEnv)
 	server := &http.Server{
 		Addr:    ":8080",
-		Handler: middleware.WithRequestLogger(logger, api.NewRouter()),
+		Handler: middleware.WithRequestLogger(appLogger, api.NewRouter(appLogger)),
 	}
 
-	logger.Info().Msgf("server running on %s", server.Addr)
+	appLogger.Info().Msgf("server running on %s", server.Addr)
 
 	if err = server.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
-		logger.Fatal().Err(err).Msg("server stopped")
+		appLogger.Fatal().Err(err).Msg("server stopped")
 	}
 }
