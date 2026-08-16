@@ -4,9 +4,9 @@
   - [ ] reivisit pack logic eventually
 - [x] tests for pack logic
 - [x] local api setup
+- [x] setup terraform for infra
+- [x] ci/cd
 - [ ] lambda api entry point setup
-- [ ] setup terraform for infra
-- [ ] ci/cd
 
 STRETCH
 - [ ] ability to manage pack sizes
@@ -47,9 +47,9 @@ TODO - 'proper' api docs here
 
 ```bash
 cd backend
-go run cmd/local/main.go
+go run cmd/api/main.go
 
-curl http://localhost:8080/packs?health
+curl http://localhost:8080/health
 curl http://localhost:8080/packs?itemsOrdered=1500
 ```
 
