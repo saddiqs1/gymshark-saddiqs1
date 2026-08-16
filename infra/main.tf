@@ -46,11 +46,9 @@ data "aws_iam_policy_document" "lambda_ecr" {
       identifiers = ["lambda.amazonaws.com"]
     }
 
-    resources = [aws_ecr_repository.app.arn]
-
     condition {
-      test     = "ArnLike"
-      variable = "aws:SourceArn"
+      test     = "StringLike"
+      variable = "aws:sourceArn"
       values   = ["arn:aws:lambda:eu-west-1:${data.aws_caller_identity.current.account_id}:function:gymshark-saddiqs1"]
     }
   }
