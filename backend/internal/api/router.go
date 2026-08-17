@@ -6,7 +6,6 @@ import (
 	"io"
 	"net/http"
 	"strconv"
-	"strings"
 
 	"github.com/rs/zerolog"
 	"github.com/saddiqs1/gymshark-saddiqs1/internal/packs"
@@ -23,7 +22,7 @@ func NewRouter(logger *zerolog.Logger, packSizes packsizes.Store) http.Handler {
 
 	mux := http.NewServeMux()
 	mux.HandleFunc("GET /health", r.health)
-	mux.HandleFunc("GET /packs", r.getPacks)
+	mux.HandleFunc("GET /packs-for-items-ordered", r.getPacksForItemsOrdered)
 	mux.HandleFunc("GET /pack-sizes", r.getPackSizes)
 	mux.HandleFunc("POST /pack-sizes", r.addPackSize)
 	mux.HandleFunc("DELETE /pack-sizes/{size}", r.removePackSize)
@@ -119,7 +118,7 @@ func (r *router) getPackSizes(w http.ResponseWriter, req *http.Request) {
 	writeJSON(w, http.StatusOK, map[string][]int{"packSizes": packSizes})
 }
 
-func (r *router) getPacks(w http.ResponseWriter, req *http.Request) {
+func (r *router) getPacksForItemsOrdered(w http.ResponseWriter, req *http.Request) {
 	r.logger.Info().Msgf("Received request: %s %s", req.Method, req.URL.String())
 	r.logger.Debug().Msgf("Query parameters: %v", req.URL.Query())
 
@@ -132,19 +131,15 @@ func (r *router) getPacks(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	packSizesStr := strings.Split(req.URL.Query().Get("packSizes"), ",")
-	packSizes := make([]int, len(packSizesStr))
-	for i, s := range packSizesStr {
-		v, err := strconv.Atoi(s)
-		if err != nil || v <= 0 {
-			r.logger.Error().Err(err).Msg("Invalid packSizes")
-			writeJSON(w, http.StatusBadRequest, map[string]string{
-				"error": "packSizes must be a list of positive integers",
-			})
-			return
-		}
-		packSizes[i] = v
+	packSizes, err := r.packSizes.List(req.Context())
+	if err != nil {
+		r.logger.Error().Err(err).Msg("Failed to retrieve pack sizes")
+		writeJSON(w, http.StatusInternalServerError, map[string]string{
+			"error": "failed to retrieve pack sizes",
+		})
+		return
 	}
+	r.logger.Debug().Msgf("packSizes found: %v", packSizes)
 
 	writeJSON(w, http.StatusOK, packs.GetPacksForOrder(r.logger, itemsOrdered, packSizes))
 }

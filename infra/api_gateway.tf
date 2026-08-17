@@ -25,9 +25,9 @@ resource "aws_apigatewayv2_route" "health" {
   target    = "integrations/${aws_apigatewayv2_integration.lambda.id}"
 }
 
-resource "aws_apigatewayv2_route" "packs" {
+resource "aws_apigatewayv2_route" "packs_for_items_ordered" {
   api_id    = aws_apigatewayv2_api.app.id
-  route_key = "GET /packs"
+  route_key = "GET /packs-for-items-ordered"
   target    = "integrations/${aws_apigatewayv2_integration.lambda.id}"
 }
 

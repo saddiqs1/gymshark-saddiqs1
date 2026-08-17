@@ -70,11 +70,14 @@ func TestHealth(t *testing.T) {
 	}
 }
 
-func TestGetPacks(t *testing.T) {
-	request := httptest.NewRequest(http.MethodGet, "/packs?itemsOrdered=501&packSizes=250,500,1000,2000,5000", nil)
+func TestGetPacksForItemsOrdered(t *testing.T) {
+	request := httptest.NewRequest(http.MethodGet, "/packs-for-items-ordered?itemsOrdered=501", nil)
 	response := httptest.NewRecorder()
+	router := NewRouter(&zerolog.Logger{}, &fakePackSizeStore{
+		sizes: []int{250, 500, 1000, 2000, 5000},
+	})
 
-	testRouter().ServeHTTP(response, request)
+	router.ServeHTTP(response, request)
 
 	actualResponseCode := response.Code
 	expectedResponseCode := http.StatusOK
@@ -89,12 +92,12 @@ func TestGetPacks(t *testing.T) {
 	}
 }
 
-func TestGetPacksRejectsInvalidItemsOrdered(t *testing.T) {
+func TestGetPacksForItemsOrderedRejectsInvalidItemsOrdered(t *testing.T) {
 	tests := []string{
-		"/packs?packSizes=1",
-		"/packs?itemsOrdered=invalid&packSizes=1",
-		"/packs?itemsOrdered=0&packSizes=1",
-		"/packs?itemsOrdered=-1&packSizes=1",
+		"/packs-for-items-ordered",
+		"/packs-for-items-ordered?itemsOrdered=invalid",
+		"/packs-for-items-ordered?itemsOrdered=0",
+		"/packs-for-items-ordered?itemsOrdered=-1",
 	}
 
 	for _, target := range tests {
@@ -119,34 +122,20 @@ func TestGetPacksRejectsInvalidItemsOrdered(t *testing.T) {
 	}
 }
 
-func TestGetPacksRejectsInvalidPackSizes(t *testing.T) {
-	tests := []string{
-		"/packs?itemsOrdered=1",
-		"/packs?itemsOrdered=1&packSizes=invalid",
-		"/packs?itemsOrdered=1&packSizes=0",
-		"/packs?itemsOrdered=1&packSizes=10,0,15",
-		"/packs?itemsOrdered=1&packSizes=10,-1,15",
+func TestGetPacksForItemsOrderedReturnsInternalServerError(t *testing.T) {
+	request := httptest.NewRequest(http.MethodGet, "/packs-for-items-ordered?itemsOrdered=501", nil)
+	response := httptest.NewRecorder()
+	router := NewRouter(&zerolog.Logger{}, &fakePackSizeStore{
+		err: errors.New("database unavailable"),
+	})
+
+	router.ServeHTTP(response, request)
+
+	if response.Code != http.StatusInternalServerError {
+		t.Fatalf("status code is %d; expected %d", response.Code, http.StatusInternalServerError)
 	}
-
-	for _, target := range tests {
-		t.Run(target, func(t *testing.T) {
-			request := httptest.NewRequest(http.MethodGet, target, nil)
-			response := httptest.NewRecorder()
-
-			testRouter().ServeHTTP(response, request)
-
-			actualResponseCode := response.Code
-			expectedResponseCode := http.StatusBadRequest
-			if actualResponseCode != expectedResponseCode {
-				t.Fatalf("status code is %v; expected %v", actualResponseCode, expectedResponseCode)
-			}
-
-			actualBody := response.Body.String()
-			expectedBody := "{\"error\":\"packSizes must be a list of positive integers\"}\n"
-			if actualBody != expectedBody {
-				t.Fatalf("body is %v; expected %v", actualBody, expectedBody)
-			}
-		})
+	if response.Body.String() != "{\"error\":\"failed to retrieve pack sizes\"}\n" {
+		t.Fatalf("unexpected body: %s", response.Body.String())
 	}
 }
 
