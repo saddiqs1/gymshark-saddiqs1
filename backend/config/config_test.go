@@ -1,6 +1,9 @@
 package config
 
-import "testing"
+import (
+	"context"
+	"testing"
+)
 
 func TestNewConfigFromEnvironment(t *testing.T) {
 	t.Setenv("APP_ENV", "production")
@@ -27,5 +30,13 @@ func TestNewConfigFromEnvironment(t *testing.T) {
 
 	if cfg.DynamoDB.TableName != "pack-sizes-test" {
 		t.Errorf("DynamoDB TableName = %q, want %q", cfg.DynamoDB.TableName, "pack-sizes-test")
+	}
+
+	credentials, err := cfg.AwsConfig.Credentials.Retrieve(context.Background())
+	if err != nil {
+		t.Fatalf("retrieve local AWS credentials: %v", err)
+	}
+	if credentials.AccessKeyID != "local" {
+		t.Errorf("AWS AccessKeyID = %q, want %q", credentials.AccessKeyID, "local")
 	}
 }

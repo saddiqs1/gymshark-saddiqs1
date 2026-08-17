@@ -31,6 +31,12 @@ resource "aws_apigatewayv2_route" "packs" {
   target    = "integrations/${aws_apigatewayv2_integration.lambda.id}"
 }
 
+resource "aws_apigatewayv2_route" "pack_sizes" {
+  api_id    = aws_apigatewayv2_api.app.id
+  route_key = "GET /pack-sizes"
+  target    = "integrations/${aws_apigatewayv2_integration.lambda.id}"
+}
+
 resource "aws_apigatewayv2_stage" "default" {
   api_id      = aws_apigatewayv2_api.app.id
   name        = "$default"

@@ -8,20 +8,36 @@ import (
 
 	"github.com/rs/zerolog"
 	"github.com/saddiqs1/gymshark-saddiqs1/internal/packs"
+	"github.com/saddiqs1/gymshark-saddiqs1/internal/packsizes"
 )
 
 type router struct {
-	logger *zerolog.Logger
+	logger    *zerolog.Logger
+	packSizes packsizes.Store
 }
 
-func NewRouter(logger *zerolog.Logger) http.Handler {
-	r := &router{logger: logger}
+func NewRouter(logger *zerolog.Logger, packSizes packsizes.Store) http.Handler {
+	r := &router{logger: logger, packSizes: packSizes}
 
 	mux := http.NewServeMux()
 	mux.HandleFunc("GET /health", r.health)
 	mux.HandleFunc("GET /packs", r.getPacks)
+	mux.HandleFunc("GET /pack-sizes", r.getPackSizes)
 
 	return mux
+}
+
+func (r *router) getPackSizes(w http.ResponseWriter, req *http.Request) {
+	packSizes, err := r.packSizes.List(req.Context())
+	if err != nil {
+		r.logger.Error().Err(err).Msg("Failed to retrieve pack sizes")
+		writeJSON(w, http.StatusInternalServerError, map[string]string{
+			"error": "failed to retrieve pack sizes",
+		})
+		return
+	}
+
+	writeJSON(w, http.StatusOK, map[string][]int{"packSizes": packSizes})
 }
 
 func (r *router) getPacks(w http.ResponseWriter, req *http.Request) {
