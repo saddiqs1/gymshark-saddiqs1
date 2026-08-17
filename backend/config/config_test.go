@@ -5,6 +5,8 @@ import "testing"
 func TestNewConfigFromEnvironment(t *testing.T) {
 	t.Setenv("APP_ENV", "production")
 	t.Setenv("LOG_LEVEL", "debug")
+	t.Setenv("DYNAMODB_ENDPOINT", "http://localhost:8000")
+	t.Setenv("PACK_SIZES_TABLE_NAME", "pack-sizes-test")
 
 	cfg, err := NewConfig()
 	if err != nil {
@@ -17,5 +19,13 @@ func TestNewConfigFromEnvironment(t *testing.T) {
 
 	if cfg.Environment.LogLevel != "debug" {
 		t.Errorf("LogLevel = %q, want %q", cfg.Environment.LogLevel, "debug")
+	}
+
+	if cfg.DynamoDB.Endpoint != "http://localhost:8000" {
+		t.Errorf("DynamoDB Endpoint = %q, want %q", cfg.DynamoDB.Endpoint, "http://localhost:8000")
+	}
+
+	if cfg.DynamoDB.TableName != "pack-sizes-test" {
+		t.Errorf("DynamoDB TableName = %q, want %q", cfg.DynamoDB.TableName, "pack-sizes-test")
 	}
 }

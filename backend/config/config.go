@@ -13,11 +13,17 @@ import (
 type (
 	Config struct {
 		Environment Environment
+		DynamoDB    DynamoDB
 	}
 
 	Environment struct {
 		AppEnv   string `env:"APP_ENV,required"`
 		LogLevel string `env:"LOG_LEVEL,required"`
+	}
+
+	DynamoDB struct {
+		Endpoint  string `env:"DYNAMODB_ENDPOINT"`
+		TableName string `env:"PACK_SIZES_TABLE_NAME,required"`
 	}
 )
 
