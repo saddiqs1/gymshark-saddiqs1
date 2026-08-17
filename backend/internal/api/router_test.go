@@ -1,6 +1,7 @@
 package api
 
 import (
+	"bytes"
 	"context"
 	"errors"
 	"net/http"
@@ -8,11 +9,22 @@ import (
 	"testing"
 
 	"github.com/rs/zerolog"
+	"github.com/saddiqs1/gymshark-saddiqs1/internal/packsizes"
 )
 
 type fakePackSizeStore struct {
-	sizes []int
-	err   error
+	sizes  []int
+	err    error
+	addErr error
+	added  []int
+}
+
+func (s *fakePackSizeStore) Add(_ context.Context, size int) error {
+	if s.addErr != nil {
+		return s.addErr
+	}
+	s.added = append(s.added, size)
+	return nil
 }
 
 func (s *fakePackSizeStore) List(context.Context) ([]int, error) {
@@ -155,5 +167,57 @@ func TestGetPackSizesReturnsInternalServerError(t *testing.T) {
 	}
 	if response.Body.String() != "{\"error\":\"failed to retrieve pack sizes\"}\n" {
 		t.Fatalf("unexpected body: %s", response.Body.String())
+	}
+}
+
+func TestAddPackSize(t *testing.T) {
+	store := &fakePackSizeStore{}
+	router := NewRouter(&zerolog.Logger{}, store)
+	request := httptest.NewRequest(http.MethodPost, "/pack-sizes", bytes.NewBufferString(`{"size":750}`))
+	response := httptest.NewRecorder()
+
+	router.ServeHTTP(response, request)
+
+	if response.Code != http.StatusCreated {
+		t.Fatalf("status code is %d; expected %d", response.Code, http.StatusCreated)
+	}
+	if response.Body.String() != "{\"size\":750}\n" {
+		t.Fatalf("unexpected body: %s", response.Body.String())
+	}
+	if len(store.added) != 1 || store.added[0] != 750 {
+		t.Fatalf("added pack sizes = %v; expected [750]", store.added)
+	}
+}
+
+func TestAddPackSizeRejectsInvalidInput(t *testing.T) {
+	tests := []string{"", `{}`, `{"size":0}`, `{"size":-1}`, `{"size":"250"}`, `{"size":250,"unknown":true}`, `{"size":250} {}`}
+	for _, body := range tests {
+		t.Run(body, func(t *testing.T) {
+			response := httptest.NewRecorder()
+			testRouter().ServeHTTP(response, httptest.NewRequest(http.MethodPost, "/pack-sizes", bytes.NewBufferString(body)))
+			if response.Code != http.StatusBadRequest {
+				t.Fatalf("status code is %d; expected %d", response.Code, http.StatusBadRequest)
+			}
+		})
+	}
+}
+
+func TestAddPackSizeReturnsConflictForDuplicate(t *testing.T) {
+	router := NewRouter(&zerolog.Logger{}, &fakePackSizeStore{addErr: packsizes.ErrAlreadyExists})
+	response := httptest.NewRecorder()
+	router.ServeHTTP(response, httptest.NewRequest(http.MethodPost, "/pack-sizes", bytes.NewBufferString(`{"size":250}`)))
+
+	if response.Code != http.StatusConflict {
+		t.Fatalf("status code is %d; expected %d", response.Code, http.StatusConflict)
+	}
+}
+
+func TestAddPackSizeReturnsInternalServerError(t *testing.T) {
+	router := NewRouter(&zerolog.Logger{}, &fakePackSizeStore{addErr: errors.New("database unavailable")})
+	response := httptest.NewRecorder()
+	router.ServeHTTP(response, httptest.NewRequest(http.MethodPost, "/pack-sizes", bytes.NewBufferString(`{"size":250}`)))
+
+	if response.Code != http.StatusInternalServerError {
+		t.Fatalf("status code is %d; expected %d", response.Code, http.StatusInternalServerError)
 	}
 }

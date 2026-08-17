@@ -2,6 +2,7 @@ package packsizes
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"sort"
 	"strconv"
@@ -14,6 +15,27 @@ import (
 type DynamoDBStore struct {
 	client    *dynamodb.Client
 	tableName string
+}
+
+func (s *DynamoDBStore) Add(ctx context.Context, size int) error {
+	_, err := s.client.PutItem(ctx, &dynamodb.PutItemInput{
+		TableName: aws.String(s.tableName),
+		Item: map[string]types.AttributeValue{
+			"size": &types.AttributeValueMemberN{Value: strconv.Itoa(size)},
+		},
+		ConditionExpression: aws.String("attribute_not_exists(#size)"),
+		ExpressionAttributeNames: map[string]string{
+			"#size": "size",
+		},
+	})
+	var alreadyExists *types.ConditionalCheckFailedException
+	if errors.As(err, &alreadyExists) {
+		return ErrAlreadyExists
+	}
+	if err != nil {
+		return fmt.Errorf("add pack size: %w", err)
+	}
+	return nil
 }
 
 func NewDynamoDBStore(client *dynamodb.Client, tableName string) *DynamoDBStore {

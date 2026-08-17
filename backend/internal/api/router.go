@@ -2,6 +2,8 @@ package api
 
 import (
 	"encoding/json"
+	"errors"
+	"io"
 	"net/http"
 	"strconv"
 	"strings"
@@ -23,11 +25,56 @@ func NewRouter(logger *zerolog.Logger, packSizes packsizes.Store) http.Handler {
 	mux.HandleFunc("GET /health", r.health)
 	mux.HandleFunc("GET /packs", r.getPacks)
 	mux.HandleFunc("GET /pack-sizes", r.getPackSizes)
+	mux.HandleFunc("POST /pack-sizes", r.addPackSize)
 
 	return mux
 }
 
+func (r *router) addPackSize(w http.ResponseWriter, req *http.Request) {
+	r.logger.Info().Msgf("Received request: %s %s", req.Method, req.URL.String())
+
+	var input struct {
+		Size int `json:"size"`
+	}
+	decoder := json.NewDecoder(req.Body)
+	decoder.DisallowUnknownFields()
+	if err := decoder.Decode(&input); err != nil || input.Size <= 0 {
+		r.logger.Error().Err(err).Msg("Error decoding request body")
+		writeJSON(w, http.StatusBadRequest, map[string]string{
+			"error": "size must be a positive integer",
+		})
+		return
+	}
+	if err := decoder.Decode(&struct{}{}); !errors.Is(err, io.EOF) {
+		r.logger.Error().Err(err).Msg("Error decoding request body")
+		writeJSON(w, http.StatusBadRequest, map[string]string{
+			"error": "request body must contain a single JSON object",
+		})
+		return
+	}
+
+	r.logger.Debug().Msgf("Input: %v", input)
+	if err := r.packSizes.Add(req.Context(), input.Size); err != nil {
+		if errors.Is(err, packsizes.ErrAlreadyExists) {
+			r.logger.Error().Err(err).Msg("Error creating pack size")
+			writeJSON(w, http.StatusConflict, map[string]string{
+				"error": "pack size already exists",
+			})
+			return
+		}
+		r.logger.Error().Err(err).Msg("Failed to add pack size")
+		writeJSON(w, http.StatusInternalServerError, map[string]string{
+			"error": "failed to add pack size",
+		})
+		return
+	}
+
+	writeJSON(w, http.StatusCreated, map[string]int{"size": input.Size})
+}
+
 func (r *router) getPackSizes(w http.ResponseWriter, req *http.Request) {
+	r.logger.Info().Msgf("Received request: %s %s", req.Method, req.URL.String())
+
 	packSizes, err := r.packSizes.List(req.Context())
 	if err != nil {
 		r.logger.Error().Err(err).Msg("Failed to retrieve pack sizes")
