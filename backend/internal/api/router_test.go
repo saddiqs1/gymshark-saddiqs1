@@ -4,13 +4,15 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"testing"
+
+	"github.com/rs/zerolog"
 )
 
 func TestHealth(t *testing.T) {
 	request := httptest.NewRequest(http.MethodGet, "/health", nil)
 	response := httptest.NewRecorder()
 
-	NewRouter().ServeHTTP(response, request)
+	NewRouter(&zerolog.Logger{}).ServeHTTP(response, request)
 
 	actualResponseCode := response.Code
 	expectedResponseCode := http.StatusOK
@@ -32,10 +34,10 @@ func TestHealth(t *testing.T) {
 }
 
 func TestGetPacks(t *testing.T) {
-	request := httptest.NewRequest(http.MethodGet, "/packs?itemsOrdered=501", nil)
+	request := httptest.NewRequest(http.MethodGet, "/packs?itemsOrdered=501&packSizes=250,500,1000,2000,5000", nil)
 	response := httptest.NewRecorder()
 
-	NewRouter().ServeHTTP(response, request)
+	NewRouter(&zerolog.Logger{}).ServeHTTP(response, request)
 
 	actualResponseCode := response.Code
 	expectedResponseCode := http.StatusOK
@@ -52,10 +54,10 @@ func TestGetPacks(t *testing.T) {
 
 func TestGetPacksRejectsInvalidItemsOrdered(t *testing.T) {
 	tests := []string{
-		"/packs",
-		"/packs?itemsOrdered=invalid",
-		"/packs?itemsOrdered=0",
-		"/packs?itemsOrdered=-1",
+		"/packs?packSizes=1",
+		"/packs?itemsOrdered=invalid&packSizes=1",
+		"/packs?itemsOrdered=0&packSizes=1",
+		"/packs?itemsOrdered=-1&packSizes=1",
 	}
 
 	for _, target := range tests {
@@ -63,7 +65,7 @@ func TestGetPacksRejectsInvalidItemsOrdered(t *testing.T) {
 			request := httptest.NewRequest(http.MethodGet, target, nil)
 			response := httptest.NewRecorder()
 
-			NewRouter().ServeHTTP(response, request)
+			NewRouter(&zerolog.Logger{}).ServeHTTP(response, request)
 
 			actualResponseCode := response.Code
 			expectedResponseCode := http.StatusBadRequest
@@ -73,6 +75,37 @@ func TestGetPacksRejectsInvalidItemsOrdered(t *testing.T) {
 
 			actualBody := response.Body.String()
 			expectedBody := "{\"error\":\"itemsOrdered must be a positive integer\"}\n"
+			if actualBody != expectedBody {
+				t.Fatalf("body is %v; expected %v", actualBody, expectedBody)
+			}
+		})
+	}
+}
+
+func TestGetPacksRejectsInvalidPackSizes(t *testing.T) {
+	tests := []string{
+		"/packs?itemsOrdered=1",
+		"/packs?itemsOrdered=1&packSizes=invalid",
+		"/packs?itemsOrdered=1&packSizes=0",
+		"/packs?itemsOrdered=1&packSizes=10,0,15",
+		"/packs?itemsOrdered=1&packSizes=10,-1,15",
+	}
+
+	for _, target := range tests {
+		t.Run(target, func(t *testing.T) {
+			request := httptest.NewRequest(http.MethodGet, target, nil)
+			response := httptest.NewRecorder()
+
+			NewRouter(&zerolog.Logger{}).ServeHTTP(response, request)
+
+			actualResponseCode := response.Code
+			expectedResponseCode := http.StatusBadRequest
+			if actualResponseCode != expectedResponseCode {
+				t.Fatalf("status code is %v; expected %v", actualResponseCode, expectedResponseCode)
+			}
+
+			actualBody := response.Body.String()
+			expectedBody := "{\"error\":\"packSizes must be a list of positive integers\"}\n"
 			if actualBody != expectedBody {
 				t.Fatalf("body is %v; expected %v", actualBody, expectedBody)
 			}

@@ -37,6 +37,24 @@ resource "aws_iam_role_policy" "lambda_logs" {
   policy = data.aws_iam_policy_document.lambda_logs.json
 }
 
+data "aws_iam_policy_document" "lambda_pack_sizes" {
+  statement {
+    effect = "Allow"
+    actions = [
+      "dynamodb:DeleteItem",
+      "dynamodb:PutItem",
+      "dynamodb:Scan",
+    ]
+    resources = [aws_dynamodb_table.pack_sizes.arn]
+  }
+}
+
+resource "aws_iam_role_policy" "lambda_pack_sizes" {
+  name   = "pack-sizes-dynamodb"
+  role   = aws_iam_role.lambda.id
+  policy = data.aws_iam_policy_document.lambda_pack_sizes.json
+}
+
 resource "aws_lambda_function" "app" {
   function_name = "gymshark-saddiqs1"
   description   = "Calculates the pack combination for a customer order"
@@ -56,6 +74,7 @@ resource "aws_lambda_function" "app" {
       APP_ENV                      = "production"
       AWS_LWA_READINESS_CHECK_PATH = "/health"
       LOG_LEVEL                    = "info"
+      PACK_SIZES_TABLE_NAME        = aws_dynamodb_table.pack_sizes.name
     }
   }
 
@@ -63,5 +82,6 @@ resource "aws_lambda_function" "app" {
     aws_cloudwatch_log_group.lambda,
     aws_ecr_repository_policy.lambda,
     aws_iam_role_policy.lambda_logs,
+    aws_iam_role_policy.lambda_pack_sizes,
   ]
 }
