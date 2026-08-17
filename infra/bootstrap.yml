@@ -206,6 +206,29 @@ Resources:
                 Action:
                   - logs:DescribeLogGroups
                 Resource: "*"
+        - PolicyName: DynamoDBPackSizesManagement
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: Allow
+                Action:
+                  - dynamodb:CreateTable
+                  - dynamodb:DeleteTable
+                  - dynamodb:DescribeContinuousBackups
+                  - dynamodb:DescribeTable
+                  - dynamodb:DescribeTimeToLive
+                  - dynamodb:ListTagsOfResource
+                  - dynamodb:UpdateContinuousBackups
+                  - dynamodb:UpdateTable
+                  - dynamodb:TagResource
+                  - dynamodb:UntagResource
+                Resource: !Sub "arn:${AWS::Partition}:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${ProjectName}-pack-sizes"
+              - Effect: Allow
+                Action:
+                  - dynamodb:DeleteItem
+                  - dynamodb:GetItem
+                  - dynamodb:PutItem
+                Resource: !Sub "arn:${AWS::Partition}:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${ProjectName}-pack-sizes"
       Tags:
         - Key: Project
           Value: !Ref ProjectName
@@ -296,6 +319,14 @@ Resources:
                 Action:
                   - logs:DescribeLogGroups
                 Resource: "*"
+              - Effect: Allow
+                Action:
+                  - dynamodb:DescribeContinuousBackups
+                  - dynamodb:DescribeTable
+                  - dynamodb:DescribeTimeToLive
+                  - dynamodb:GetItem
+                  - dynamodb:ListTagsOfResource
+                Resource: !Sub "arn:${AWS::Partition}:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${ProjectName}-pack-sizes"
       Tags:
         - Key: Project
           Value: !Ref ProjectName
