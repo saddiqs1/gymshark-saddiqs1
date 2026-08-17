@@ -38,6 +38,27 @@ func (s *DynamoDBStore) Add(ctx context.Context, size int) error {
 	return nil
 }
 
+func (s *DynamoDBStore) Remove(ctx context.Context, size int) error {
+	_, err := s.client.DeleteItem(ctx, &dynamodb.DeleteItemInput{
+		TableName: aws.String(s.tableName),
+		Key: map[string]types.AttributeValue{
+			"size": &types.AttributeValueMemberN{Value: strconv.Itoa(size)},
+		},
+		ConditionExpression: aws.String("attribute_exists(#size)"),
+		ExpressionAttributeNames: map[string]string{
+			"#size": "size",
+		},
+	})
+	var notFound *types.ConditionalCheckFailedException
+	if errors.As(err, &notFound) {
+		return ErrNotFound
+	}
+	if err != nil {
+		return fmt.Errorf("remove pack size: %w", err)
+	}
+	return nil
+}
+
 func NewDynamoDBStore(client *dynamodb.Client, tableName string) *DynamoDBStore {
 	return &DynamoDBStore{client: client, tableName: tableName}
 }

@@ -26,8 +26,40 @@ func NewRouter(logger *zerolog.Logger, packSizes packsizes.Store) http.Handler {
 	mux.HandleFunc("GET /packs", r.getPacks)
 	mux.HandleFunc("GET /pack-sizes", r.getPackSizes)
 	mux.HandleFunc("POST /pack-sizes", r.addPackSize)
+	mux.HandleFunc("DELETE /pack-sizes/{size}", r.removePackSize)
 
 	return mux
+}
+
+func (r *router) removePackSize(w http.ResponseWriter, req *http.Request) {
+	r.logger.Info().Msgf("Received request: %s %s", req.Method, req.URL.String())
+	r.logger.Debug().Msgf("Path parameter: %v", req.PathValue("size"))
+
+	size, err := strconv.Atoi(req.PathValue("size"))
+	if err != nil || size <= 0 {
+		r.logger.Error().Err(err).Msg("Invalid size")
+		writeJSON(w, http.StatusBadRequest, map[string]string{
+			"error": "size must be a positive integer",
+		})
+		return
+	}
+
+	if err := r.packSizes.Remove(req.Context(), size); err != nil {
+		if errors.Is(err, packsizes.ErrNotFound) {
+			r.logger.Error().Err(err).Msg("Size not found")
+			writeJSON(w, http.StatusNotFound, map[string]string{
+				"error": "pack size not found",
+			})
+			return
+		}
+		r.logger.Error().Err(err).Msg("Failed to remove pack size")
+		writeJSON(w, http.StatusInternalServerError, map[string]string{
+			"error": "failed to remove pack size",
+		})
+		return
+	}
+
+	w.WriteHeader(http.StatusNoContent)
 }
 
 func (r *router) addPackSize(w http.ResponseWriter, req *http.Request) {

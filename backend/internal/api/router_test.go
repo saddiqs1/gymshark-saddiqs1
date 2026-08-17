@@ -13,10 +13,12 @@ import (
 )
 
 type fakePackSizeStore struct {
-	sizes  []int
-	err    error
-	addErr error
-	added  []int
+	sizes     []int
+	err       error
+	addErr    error
+	added     []int
+	removeErr error
+	removed   []int
 }
 
 func (s *fakePackSizeStore) Add(_ context.Context, size int) error {
@@ -24,6 +26,14 @@ func (s *fakePackSizeStore) Add(_ context.Context, size int) error {
 		return s.addErr
 	}
 	s.added = append(s.added, size)
+	return nil
+}
+
+func (s *fakePackSizeStore) Remove(_ context.Context, size int) error {
+	if s.removeErr != nil {
+		return s.removeErr
+	}
+	s.removed = append(s.removed, size)
 	return nil
 }
 
@@ -216,6 +226,56 @@ func TestAddPackSizeReturnsInternalServerError(t *testing.T) {
 	router := NewRouter(&zerolog.Logger{}, &fakePackSizeStore{addErr: errors.New("database unavailable")})
 	response := httptest.NewRecorder()
 	router.ServeHTTP(response, httptest.NewRequest(http.MethodPost, "/pack-sizes", bytes.NewBufferString(`{"size":250}`)))
+
+	if response.Code != http.StatusInternalServerError {
+		t.Fatalf("status code is %d; expected %d", response.Code, http.StatusInternalServerError)
+	}
+}
+
+func TestRemovePackSize(t *testing.T) {
+	store := &fakePackSizeStore{}
+	router := NewRouter(&zerolog.Logger{}, store)
+	response := httptest.NewRecorder()
+
+	router.ServeHTTP(response, httptest.NewRequest(http.MethodDelete, "/pack-sizes/750", nil))
+
+	if response.Code != http.StatusNoContent {
+		t.Fatalf("status code is %d; expected %d", response.Code, http.StatusNoContent)
+	}
+	if response.Body.Len() != 0 {
+		t.Fatalf("expected an empty body; got %q", response.Body.String())
+	}
+	if len(store.removed) != 1 || store.removed[0] != 750 {
+		t.Fatalf("removed pack sizes = %v; expected [750]", store.removed)
+	}
+}
+
+func TestRemovePackSizeRejectsInvalidSize(t *testing.T) {
+	for _, target := range []string{"/pack-sizes/not-a-number", "/pack-sizes/0", "/pack-sizes/-1"} {
+		t.Run(target, func(t *testing.T) {
+			response := httptest.NewRecorder()
+			testRouter().ServeHTTP(response, httptest.NewRequest(http.MethodDelete, target, nil))
+			if response.Code != http.StatusBadRequest {
+				t.Fatalf("status code is %d; expected %d", response.Code, http.StatusBadRequest)
+			}
+		})
+	}
+}
+
+func TestRemovePackSizeReturnsNotFound(t *testing.T) {
+	router := NewRouter(&zerolog.Logger{}, &fakePackSizeStore{removeErr: packsizes.ErrNotFound})
+	response := httptest.NewRecorder()
+	router.ServeHTTP(response, httptest.NewRequest(http.MethodDelete, "/pack-sizes/750", nil))
+
+	if response.Code != http.StatusNotFound {
+		t.Fatalf("status code is %d; expected %d", response.Code, http.StatusNotFound)
+	}
+}
+
+func TestRemovePackSizeReturnsInternalServerError(t *testing.T) {
+	router := NewRouter(&zerolog.Logger{}, &fakePackSizeStore{removeErr: errors.New("database unavailable")})
+	response := httptest.NewRecorder()
+	router.ServeHTTP(response, httptest.NewRequest(http.MethodDelete, "/pack-sizes/750", nil))
 
 	if response.Code != http.StatusInternalServerError {
 		t.Fatalf("status code is %d; expected %d", response.Code, http.StatusInternalServerError)
