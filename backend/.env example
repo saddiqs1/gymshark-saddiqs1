@@ -1,2 +1,5 @@
 APP_ENV=development
 LOG_LEVEL=debug
+AWS_REGION=eu-west-1
+DYNAMODB_ENDPOINT=http://localhost:8000
+PACK_SIZES_TABLE_NAME=gymshark-saddiqs1-pack-sizes

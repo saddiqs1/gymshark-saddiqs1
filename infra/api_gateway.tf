@@ -4,7 +4,7 @@ resource "aws_apigatewayv2_api" "app" {
 
   cors_configuration {
     allow_headers = ["content-type"]
-    allow_methods = ["GET"]
+    allow_methods = ["DELETE", "GET", "POST"]
     allow_origins = ["*"]
   }
 }
@@ -25,9 +25,27 @@ resource "aws_apigatewayv2_route" "health" {
   target    = "integrations/${aws_apigatewayv2_integration.lambda.id}"
 }
 
-resource "aws_apigatewayv2_route" "packs" {
+resource "aws_apigatewayv2_route" "packs_for_items_ordered" {
   api_id    = aws_apigatewayv2_api.app.id
-  route_key = "GET /packs"
+  route_key = "GET /packs-for-items-ordered"
+  target    = "integrations/${aws_apigatewayv2_integration.lambda.id}"
+}
+
+resource "aws_apigatewayv2_route" "pack_sizes" {
+  api_id    = aws_apigatewayv2_api.app.id
+  route_key = "GET /pack-sizes"
+  target    = "integrations/${aws_apigatewayv2_integration.lambda.id}"
+}
+
+resource "aws_apigatewayv2_route" "create_pack_size" {
+  api_id    = aws_apigatewayv2_api.app.id
+  route_key = "POST /pack-sizes"
+  target    = "integrations/${aws_apigatewayv2_integration.lambda.id}"
+}
+
+resource "aws_apigatewayv2_route" "delete_pack_size" {
+  api_id    = aws_apigatewayv2_api.app.id
+  route_key = "DELETE /pack-sizes/{size}"
   target    = "integrations/${aws_apigatewayv2_integration.lambda.id}"
 }
 
