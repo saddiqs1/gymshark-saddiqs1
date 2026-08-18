@@ -41,11 +41,21 @@ In a seperate terminal, you can run the following (see [API documentation](#api-
 curl http://localhost:8080/health
 ```
 
-To test the code:
+To run the unit tests:
 
 ```bash
 cd backend
 go test ./...
+```
+
+To run the integration test:
+
+```bash
+docker compose up -d dynamodb
+cd backend
+go test -tags=integration ./internal/packsizes
+
+# NOTE: The integration test uses `http://localhost:8000` by default.
 ```
 
 ### Interact with deployed api:
