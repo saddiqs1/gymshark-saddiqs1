@@ -8,8 +8,8 @@ import (
 	"strconv"
 
 	"github.com/rs/zerolog"
-	"github.com/saddiqs1/gymshark-saddiqs1/internal/packs"
 	"github.com/saddiqs1/gymshark-saddiqs1/internal/packsizes"
+	"github.com/saddiqs1/gymshark-saddiqs1/internal/shippingpacks"
 )
 
 type router struct {
@@ -141,7 +141,7 @@ func (r *router) getPacksForItemsOrdered(w http.ResponseWriter, req *http.Reques
 	}
 	r.logger.Debug().Msgf("packSizes found: %v", packSizes)
 
-	packResults, err := packs.GetPacksForOrder(r.logger, itemsOrdered, packSizes)
+	packResults, err := shippingpacks.GetShippingPacksForOrder(r.logger, itemsOrdered, packSizes)
 	if err != nil {
 		r.logger.Error().Err(err).Msg("Failed to calculate packs for order")
 		writeJSON(w, http.StatusInternalServerError, map[string]string{
