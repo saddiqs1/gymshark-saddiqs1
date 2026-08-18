@@ -9,8 +9,8 @@ import (
 )
 
 type PackResult struct {
-	PackSize int
-	Count    int
+	PackSize int `json:"packSize"`
+	Count    int `json:"count"`
 }
 
 func GetPacksForOrder(logger *zerolog.Logger, itemsOrdered int, packSizes []int) ([]PackResult, error) {

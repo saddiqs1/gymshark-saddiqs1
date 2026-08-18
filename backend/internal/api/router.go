@@ -141,7 +141,16 @@ func (r *router) getPacksForItemsOrdered(w http.ResponseWriter, req *http.Reques
 	}
 	r.logger.Debug().Msgf("packSizes found: %v", packSizes)
 
-	writeJSON(w, http.StatusOK, packs.GetPacksForOrder(r.logger, itemsOrdered, packSizes))
+	packResults, err := packs.GetPacksForOrder(r.logger, itemsOrdered, packSizes)
+	if err != nil {
+		r.logger.Error().Err(err).Msg("Failed to calculate packs for order")
+		writeJSON(w, http.StatusInternalServerError, map[string]string{
+			"error": "failed to calculate packs for order",
+		})
+		return
+	}
+
+	writeJSON(w, http.StatusOK, packResults)
 }
 
 func (r *router) health(w http.ResponseWriter, _ *http.Request) {
