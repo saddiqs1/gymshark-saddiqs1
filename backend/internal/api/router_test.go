@@ -86,9 +86,26 @@ func TestGetPacksForItemsOrdered(t *testing.T) {
 	}
 
 	actualBody := response.Body.String()
-	expectedBody := "{\"250\":1,\"500\":1}\n"
+	expectedBody := "[{\"packSize\":250,\"count\":1},{\"packSize\":500,\"count\":1}]\n"
 	if actualBody != expectedBody {
 		t.Fatalf("body is %v; expected %v", actualBody, expectedBody)
+	}
+}
+
+func TestGetPacksForItemsOrderedReturnsInternalServerErrorWhenCalculationFails(t *testing.T) {
+	request := httptest.NewRequest(http.MethodGet, "/packs-for-items-ordered?itemsOrdered=501", nil)
+	response := httptest.NewRecorder()
+	router := NewRouter(&zerolog.Logger{}, &fakePackSizeStore{
+		sizes: []int{-1},
+	})
+
+	router.ServeHTTP(response, request)
+
+	if response.Code != http.StatusInternalServerError {
+		t.Fatalf("status code is %d; expected %d", response.Code, http.StatusInternalServerError)
+	}
+	if response.Body.String() != "{\"error\":\"failed to calculate packs for order\"}\n" {
+		t.Fatalf("unexpected body: %s", response.Body.String())
 	}
 }
 
