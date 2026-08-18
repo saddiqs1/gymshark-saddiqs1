@@ -86,7 +86,7 @@ func TestGetPacksForItemsOrdered(t *testing.T) {
 	}
 
 	actualBody := response.Body.String()
-	expectedBody := "[{\"PackSize\":250,\"Count\":1},{\"PackSize\":500,\"Count\":1}]\n"
+	expectedBody := "[{\"packSize\":250,\"count\":1},{\"packSize\":500,\"count\":1}]\n"
 	if actualBody != expectedBody {
 		t.Fatalf("body is %v; expected %v", actualBody, expectedBody)
 	}
