@@ -59,7 +59,7 @@ curl https://y28lll8ovg.execute-api.eu-west-1.amazonaws.com/health
 
 ```js
 gymshark-saddiqs1
-├── /github/workflows // build & deploy CI/CD
+├── /.github/workflows // build & deploy CI/CD
 │ 
 ├── backend/
 │   ├── cmd/ 
