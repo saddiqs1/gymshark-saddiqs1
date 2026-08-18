@@ -1,6 +1,6 @@
 # Gymshark Coding Test
 
-This is my attempt at the coding challenge for Gymshark. The brief summary of the problem is that a customer requests an amount of `items`, and for a given set of `packSizes`, calculate the number of packs needed to ship to the customer. There were 3 key rules to satisfy:
+This is my attempt at the coding challenge for Gymshark. The brief summary of the problem is that a customer requests an amount of `items`, and for a given set of `packSizes`, calculate the minimum number of packs needed to ship to the customer. There were 3 key rules to satisfy:
 
 > 1. Only whole packs can be sent. Packs cannot be broken open.
 > 2. Within the constraints of Rule 1 above, send out no more items than necessary to fulfil the order. 
