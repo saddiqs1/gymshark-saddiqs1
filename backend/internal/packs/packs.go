@@ -37,7 +37,8 @@ func GetPacksForOrder(logger *zerolog.Logger, itemsOrdered int, packSizes []int)
 
 			// does (current packsize - item amount), exist? if so, we can append
 			if packResultCombinations[numberOfItems-packSize] != nil {
-				packResults := packResultCombinations[numberOfItems-packSize]
+				packResults := make([]PackResult, len(packResultCombinations[numberOfItems-packSize]))
+				copy(packResults, packResultCombinations[numberOfItems-packSize])
 				isExistingPack := false
 
 				for i := range packResults {
