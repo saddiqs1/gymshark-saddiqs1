@@ -8,7 +8,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb"
 	"github.com/saddiqs1/gymshark-saddiqs1/config"
 	"github.com/saddiqs1/gymshark-saddiqs1/internal/api"
-	"github.com/saddiqs1/gymshark-saddiqs1/internal/middleware"
 	"github.com/saddiqs1/gymshark-saddiqs1/internal/packsizes"
 	"github.com/saddiqs1/gymshark-saddiqs1/pkg/logger"
 )
@@ -28,7 +27,7 @@ func main() {
 	packSizeStore := packsizes.NewDynamoDBStore(dynamoClient, cfg.DynamoDB.TableName)
 	server := &http.Server{
 		Addr:    ":8080",
-		Handler: middleware.WithRequestLogger(appLogger, api.NewRouter(appLogger, packSizeStore)),
+		Handler: api.NewRouter(appLogger, packSizeStore),
 	}
 
 	appLogger.Info().Msgf("server running on %s", server.Addr)
