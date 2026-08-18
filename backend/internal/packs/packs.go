@@ -1,34 +1,70 @@
 package packs
 
 import (
+	"errors"
+	"math"
 	"slices"
 
 	"github.com/rs/zerolog"
 )
 
-// TODO - revisit this eventually, logic is currently incorrect
-func GetPacksForOrder(logger *zerolog.Logger, itemsOrdered int, packSizes []int) map[int]int {
-	orderedPackSizes := orderPackSizes(packSizes)
-	smallestPackSize := 250
-	resultPacks := make(map[int]int)
-	itemsRemaining := itemsOrdered
+type PackResult struct {
+	PackSize int
+	Count    int
+}
 
-	for i, packSize := range orderedPackSizes {
-		// TODO - make the logic for small pack sizes more generic, currently hardcoded for 250 and 500
-		if packSize == smallestPackSize && itemsRemaining > packSize {
-			// between 251 & 499, package 1 pack of 500
-			resultPacks[orderedPackSizes[i-1]]++
-		} else if itemsRemaining >= packSize {
-			numPacks := itemsRemaining / packSize
-			resultPacks[packSize] = numPacks
-			itemsRemaining -= numPacks * packSize
-		} else if packSize == smallestPackSize && itemsRemaining > 0 {
-			// between 1 & 249
-			resultPacks[smallestPackSize]++
+func GetPacksForOrder(logger *zerolog.Logger, itemsOrdered int, packSizes []int) ([]PackResult, error) {
+	orderedPackSizes := orderPackSizes(packSizes)
+	smallestPack := orderedPackSizes[len(orderedPackSizes)-1]
+
+	// worst possible solution is using smallest pack size only
+	maxResult := PackResult{PackSize: smallestPack, Count: int(math.Ceil(float64(itemsOrdered) / float64(smallestPack)))}
+	maxResultTotalItems := maxResult.Count * maxResult.PackSize
+
+	packResultCombinations := map[int][]PackResult{}
+
+	for numberOfItems := 1; numberOfItems <= maxResultTotalItems; numberOfItems++ {
+		for _, packSize := range orderedPackSizes {
+			// NOTE: break once best combination has been found, no need to calculate for further packsizes
+
+			// if packsize matches items
+			if numberOfItems == packSize {
+				packResult := PackResult{PackSize: packSize, Count: 1}
+				packResults := []PackResult{packResult}
+				packResultCombinations[numberOfItems] = packResults
+				break
+			}
+
+			// does (current packsize - item amount), exist? if so, we can append
+			if packResultCombinations[numberOfItems-packSize] != nil {
+				packResults := packResultCombinations[numberOfItems-packSize]
+				isExistingPack := false
+
+				for i := range packResults {
+					if packResults[i].PackSize == packSize {
+						packResults[i].Count++
+						isExistingPack = true
+						break
+					}
+				}
+
+				if !isExistingPack {
+					packResults = append(packResults, PackResult{PackSize: packSize, Count: 1})
+				}
+
+				packResultCombinations[numberOfItems] = packResults
+				break
+			}
 		}
 	}
 
-	return resultPacks
+	for i := itemsOrdered; i <= maxResultTotalItems; i++ {
+		if packResultCombinations[i] != nil {
+			return packResultCombinations[i], nil
+		}
+	}
+
+	return []PackResult{}, errors.New("no valid pack size combinations found for requested order")
 }
 
 func orderPackSizes(packSizes []int) []int {
