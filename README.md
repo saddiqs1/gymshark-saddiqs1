@@ -6,7 +6,7 @@ This is my attempt at the coding challenge for Gymshark. The brief summary of th
 > 2. Within the constraints of Rule 1 above, send out no more items than necessary to fulfil the order. 
 > 3. Within the constraints of Rules 1 &amp; 2 above, send out as few packs as possible to fulfil each order.
 
-For more insights, see [THOUGHTS.md](./THOUGHTS.md).
+For more insights into my thought process for this entire project, see [THOUGHTS.md](./THOUGHTS.md).
 
 ## Prequisites
 
