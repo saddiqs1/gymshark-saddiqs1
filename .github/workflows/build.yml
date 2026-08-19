@@ -47,6 +47,37 @@ jobs:
       - name: Test Go code
         run: cd backend && go test ./...
 
+  integration-test:
+    name: Test DynamoDB integration
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Start DynamoDB Local
+        run: docker compose up -d dynamodb
+
+      - name: Wait for DynamoDB Local
+        run: |
+          for attempt in {1..30}; do
+            if curl --silent http://127.0.0.1:8000 >/dev/null; then
+              exit 0
+            fi
+            sleep 1
+          done
+
+          docker compose logs dynamodb
+          exit 1
+
+      - name: Test DynamoDB integration
+        working-directory: backend
+        env:
+          DYNAMODB_ENDPOINT: http://127.0.0.1:8000
+        run: go test -tags=integration ./internal/packsizes
+
+      - name: Show DynamoDB logs on failure
+        if: failure()
+        run: docker compose logs dynamodb
+
   build-artifact:
     name: Build artifact
     runs-on: ubuntu-latest

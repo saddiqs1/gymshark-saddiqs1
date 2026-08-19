@@ -17,12 +17,12 @@ func GetShippingPacksForOrder(logger *zerolog.Logger, itemsOrdered int, packSize
 	orderedPackSizes := orderPackSizes(packSizes)
 	smallestPack := orderedPackSizes[len(orderedPackSizes)-1]
 
-	maxResult := ShippingPack{PackSize: smallestPack, Count: int(math.Ceil(float64(itemsOrdered) / float64(smallestPack)))}
-	maxResultTotalItems := maxResult.Count * maxResult.PackSize
+	maxShippingPacks := ShippingPack{PackSize: smallestPack, Count: int(math.Ceil(float64(itemsOrdered) / float64(smallestPack)))}
+	maxShippingPacksTotalItems := maxShippingPacks.Count * maxShippingPacks.PackSize
 
 	shippingPacksForItemAmount := map[int][]ShippingPack{}
 
-	for numberOfItems := 1; numberOfItems <= maxResultTotalItems; numberOfItems++ {
+	for numberOfItems := 1; numberOfItems <= maxShippingPacksTotalItems; numberOfItems++ {
 		for _, packSize := range orderedPackSizes {
 			if numberOfItems == packSize {
 				shippingPacksForItemAmount[numberOfItems] = []ShippingPack{{PackSize: packSize, Count: 1}}
@@ -53,7 +53,7 @@ func GetShippingPacksForOrder(logger *zerolog.Logger, itemsOrdered int, packSize
 		}
 	}
 
-	for i := itemsOrdered; i <= maxResultTotalItems; i++ {
+	for i := itemsOrdered; i <= maxShippingPacksTotalItems; i++ {
 		if shippingPacksForItemAmount[i] != nil {
 			return shippingPacksForItemAmount[i], nil
 		}
