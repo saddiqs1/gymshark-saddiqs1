@@ -58,10 +58,20 @@ func TestShippingPacks(t *testing.T) {
 			packSizes:    []int{5000, 2000, 1000, 500, 250},
 			result:       []ShippingPack{{PackSize: 2000, Count: 1}},
 		},
-		"800 items with different pack sizes": {
+		"800 items with 600,400,300": {
 			itemsOrdered: 800,
 			packSizes:    []int{600, 400, 300},
 			result:       []ShippingPack{{PackSize: 400, Count: 2}},
+		},
+		"800 items with 500,400,100": {
+			itemsOrdered: 800,
+			packSizes:    []int{500, 400, 100},
+			result:       []ShippingPack{{PackSize: 400, Count: 2}},
+		},
+		"200 items with 120,80,50": {
+			itemsOrdered: 200,
+			packSizes:    []int{120, 80, 50},
+			result:       []ShippingPack{{PackSize: 80, Count: 1}, {PackSize: 120, Count: 1}},
 		},
 	}
 

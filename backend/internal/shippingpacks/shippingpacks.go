@@ -23,10 +23,12 @@ func GetShippingPacksForOrder(logger *zerolog.Logger, itemsOrdered int, packSize
 	shippingPacksForItemAmount := map[int][]ShippingPack{}
 
 	for numberOfItems := 1; numberOfItems <= maxShippingPacksTotalItems; numberOfItems++ {
+		shippingPackCombinations := [][]ShippingPack{}
+
 		for _, packSize := range orderedPackSizes {
 			if numberOfItems == packSize {
-				shippingPacksForItemAmount[numberOfItems] = []ShippingPack{{PackSize: packSize, Count: 1}}
-				break
+				shippingPackCombinations = append(shippingPackCombinations, []ShippingPack{{PackSize: packSize, Count: 1}})
+				continue
 			}
 
 			prevShippingPacks := shippingPacksForItemAmount[numberOfItems-packSize]
@@ -47,9 +49,19 @@ func GetShippingPacksForOrder(logger *zerolog.Logger, itemsOrdered int, packSize
 					shippingPacks = append(shippingPacks, ShippingPack{PackSize: packSize, Count: 1})
 				}
 
-				shippingPacksForItemAmount[numberOfItems] = shippingPacks
-				break
+				shippingPackCombinations = append(shippingPackCombinations, shippingPacks)
 			}
+		}
+
+		if len(shippingPackCombinations) > 0 {
+			bestCombination := shippingPackCombinations[0]
+			for _, spc := range shippingPackCombinations {
+				if getPackCount(spc) < getPackCount(bestCombination) {
+					bestCombination = spc
+				}
+			}
+
+			shippingPacksForItemAmount[numberOfItems] = bestCombination
 		}
 	}
 
@@ -68,4 +80,12 @@ func orderPackSizes(packSizes []int) []int {
 	slices.Sort(tempPackSizes)
 	slices.Reverse(tempPackSizes)
 	return tempPackSizes
+}
+
+func getPackCount(packs []ShippingPack) int {
+	count := 0
+	for _, p := range packs {
+		count += p.Count
+	}
+	return count
 }
