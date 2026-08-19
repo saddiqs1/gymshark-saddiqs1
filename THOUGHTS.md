@@ -1,39 +1,3 @@
-## TODO
-- [x] readme
-- [x] logic for packs
-  - [x] reivisit pack logic eventually
-- [x] tests for pack logic
-- [x] local api setup
-- [x] setup terraform for infra
-- [x] CI/CD
-- [x] lambda api entry point setup
-
-STRETCH
-- [x] ability to manage pack sizes
-- [ ] 'thoughts' doc outlining my thinking
-- [ ] frontend
-- [ ] deploy frontend with infra
-
------------------
-
-TODO
-- [ ] GetShippingPacksForOrder
-  - [ ] initial 'greedy' algo attempt
-  - [ ] rework in DP way
-  - [ ] testing
-- [ ] Repo structure
-  - [ ] backend
-    - [ ] initially setup for local & lambda seperate
-    - [ ] docker pattern for aws different
-  - [ ] terraform
-    - [ ] bootstrap
-    - [ ] ci/cd setup
-- [ ] Improvements for future
-  - [ ] auth for api
-  - [ ] frontend
-
------------------
-
 # Thoughts
 
 I wanted to include some details related to my thought process & findings I came across whilst working on this submission. The contents are as follows:
@@ -42,13 +6,10 @@ I wanted to include some details related to my thought process & findings I came
   - [`GetShippingPacksForOrder`](#getshippingpacksfororder)
     - [Attempt 1](#attempt-1)
     - [Attempt 2](#attempt-2)
-  - [Repo Structure](#repo-structure)
-    - [`backend`](#backend)
-      - [testing](#testing)
-    - [`infra`](#infra)
+  - [Codebase](#codebase)
+    - [`aws-lambda-web-adapter`](#aws-lambda-web-adapter)
+    - [testing](#testing)
   - [Improvements to be made](#improvements-to-be-made)
-    - [API Auth](#api-auth)
-    - [Frontend](#frontend)
 
 ## `GetShippingPacksForOrder`
 
@@ -83,17 +44,32 @@ With this in mind, I approached the problem from a different point of view, and 
 e.g. [link to diagram](https://excalidraw.com/#json=mC5zwll_ctEn9xBmvdCts,R4wuHWDhLcr6YhfNYOM-Kg)
 ![shippingpacks logic](shippingpacks-logic.png)
 
+## Codebase
 
-## Repo Structure
+### [`aws-lambda-web-adapter`](https://github.com/aws/aws-lambda-web-adapter)
+Previously when creating http api's with the intention of hosting it on lambda's, I've used the now deprecated [`aws-lambda-go-api-proxy`](https://github.com/awslabs/aws-lambda-go-api-proxy) library. This was my first time using `aws-lambda-web-adapter`, which ended up being really simple - all it required was a [one liner](https://github.com/aws/aws-lambda-web-adapter#docker-images) in the `Dockerfile`:
 
-### `backend`
+`COPY --from=public.ecr.aws/awsguru/aws-lambda-adapter:1.0.1 /lambda-adapter /opt/extensions/lambda-adapter`
 
-#### testing
+Another cool benefit of this meant that it was easier to test & develop the code locally, since the serving of the api does not change for lambda setup specifically.
 
-### `infra`
+### testing
+
+I split the tests according to the boundaries in the application:
+
+- `shippingpacks` contains table-driven unit tests for the core packing rules and edge cases
+- `api` uses an in-memory implementation of the `packsizes.Store` interface. This allows the HTTP routes, validation, response bodies, status codes, and error handling to be tested without requiring DynamoDB
+- `config` verifies that application configuration is constructed correctly from environment variables
+- `packsizes` has an opt-in integration test that runs the real `DynamoDBStore` against DynamoDB Local
+
+The packing tests were especially important during development. They demonstrated that the [initial implementation](#attempt-1) worked for common inputs but failed for certain `packSize` combinations.
+
+The API tests use a fake store because their responsibility is to verify the HTTP layer rather than DynamoDB itself. The DynamoDB integration test separately verifies the production persistence behaviour, including adding, listing and sorting sizes, conditional duplicate detection, deletion, and missing-item handling.
 
 ## Improvements to be made
 
-### API Auth
+- ### API Auth
+  Given more time, I would protect the pack-size admin endpoints using an Amazon Cognito JWT authoriser configured on API Gateway through Terraform. Health checks and pack calculations could remain public, while adding or removing pack sizes would require an authenticated user with an administrative scope. API Gateway would validate tokens before invoking Lambda, with additional application-level authorisation where necessary.
 
-### Frontend
+- ### Frontend
+  Unfortunately I did not get time to create a frontend, but I intended to build it using nextjs and a component library of some kind (probably [mantine](https://mantine.dev/) since I've used it for other personal projects).
