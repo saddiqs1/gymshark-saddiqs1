@@ -2,14 +2,13 @@
 
 I wanted to include some details related to my thought process & findings I came across whilst working on this submission. The contents are as follows:
 
-- [Thoughts](#thoughts)
-  - [`GetShippingPacksForOrder`](#getshippingpacksfororder)
-    - [Attempt 1](#attempt-1)
-    - [Attempt 2](#attempt-2)
-  - [Codebase](#codebase)
-    - [`aws-lambda-web-adapter`](#aws-lambda-web-adapter)
-    - [testing](#testing)
-  - [Improvements to be made](#improvements-to-be-made)
+- [`GetShippingPacksForOrder`](#getshippingpacksfororder)
+  - [Attempt 1](#attempt-1)
+  - [Attempt 2](#attempt-2)
+- [Codebase](#codebase)
+  - [`aws-lambda-web-adapter`](#aws-lambda-web-adapter)
+  - [testing](#testing)
+- [Improvements to be made](#improvements-to-be-made)
 
 ## `GetShippingPacksForOrder`
 
