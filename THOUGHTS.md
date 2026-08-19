@@ -72,3 +72,6 @@ The API tests use a fake store because their responsibility is to verify the HTT
 
 - ### Frontend
   Unfortunately I did not get time to create a frontend, but I intended to build it using nextjs and a component library of some kind (probably [mantine](https://mantine.dev/) since I've used it for other personal projects).
+  
+- ### Custom Domain
+  I intended to setup a custom domain instead of relying on the auto generated domain. This would've been managed via terraform where possible
